@@ -104,7 +104,7 @@ RuntimeLogger::RuntimeLogger()
     }
 
 #ifndef BENCHMARK_DISCARD_ENTRIES_AT_STAGINGBUFFER
-    std::cout << "tttttt" << std::endl;
+    // std::cout << "tttttt" << std::endl;
     int i = 0;
     compressionThread = std::thread([this, i]()
                                     { compressionThreadMain(i,"",999); });
@@ -716,7 +716,7 @@ void RuntimeLogger::setLogFile_internal(const char *filename, const char *hostna
     //     throw std::ios_base::failure(err);
     // }
     // logSplitter_ = std::make_shared<LogSplitter>(filename, 500, 5);
-    logSplitter_ = std::make_shared<LogSplitter>(filename, 100 * 1024 * 1024, 5);
+    logSplitter_ = std::make_shared<LogSplitter>(filename, 10 * 1024 * 1024, 5);
 
     // Try to open the file using LogSplitter
     FILE* newFd = logSplitter_->getCurrentFileHandler();
@@ -736,7 +736,7 @@ void RuntimeLogger::setLogFile_internal(const char *filename, const char *hostna
     }
 
     if (compressionThread.joinable())
-        std::cout << "compressionThread.joinable()" << std::endl;
+        // std::cout << "compressionThread.joinable()" << std::endl;
         compressionThread.join();
 
     if (outputFd > 0) {
@@ -749,7 +749,7 @@ void RuntimeLogger::setLogFile_internal(const char *filename, const char *hostna
     nextInvocationIndexToBePersisted = 0; // Reset the dictionary
     compressionThreadShouldExit = false;
 #ifndef BENCHMARK_DISCARD_ENTRIES_AT_STAGINGBUFFER
-    std::cout << "rrrrrrrr" << std::endl;
+    // std::cout << "rrrrrrrr" << std::endl;
     int i = 1;
     //todo::这里写的太粗糙，一会儿改改
     compressionThread = std::thread([this, i, hostname, pid]()

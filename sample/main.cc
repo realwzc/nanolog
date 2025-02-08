@@ -90,10 +90,9 @@ void runBenchmark() {
     double time_span;
 
     start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < 220; ++i) {
+    for (int i = 0; i < RECORDS; ++i)
+    {
         NANO_LOG(INFO, "Simple log message with 0 parameters %d",i);
-        NANO_LOG(DEBUG, "xxxxxxxxxxx %d",i);
-        usleep(500000);
     }
 
     stop = std::chrono::high_resolution_clock::now();

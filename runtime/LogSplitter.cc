@@ -31,21 +31,18 @@ bool LogSplitter::checkAndRotate(size_t messageSize) {
     current_size_ += messageSize;
     if (current_size_ >= max_size_) {
         rotate_();
-        return true;  // Indicate that rotation occurred
+        return true;  
     }
-    return false;    // No rotation needed
+    return false;   
 }
-
 void LogSplitter::rotate_() {
     std::lock_guard<std::mutex> lock(mutex_);
     
-    // 1. 关闭当前文件
     if (fHandler_) {
         fclose(fHandler_);
         fHandler_ = nullptr;
     }
 
-    // 2. 执行文件轮转
     for (size_t i = max_files_; i > 0; --i) {
         std::string src_filename = calculate_filename(base_filename_, i - 1);
         if (!std::filesystem::exists(src_filename)) {
@@ -59,18 +56,15 @@ void LogSplitter::rotate_() {
         }
     }
 
-    // 3. 打开新文件
     std::string new_filename = calculate_filename(base_filename_, 0);
-    fHandler_ = fopen(new_filename.c_str(), "w");  // 使用 "w" 而不是 "a"
+    fHandler_ = fopen(new_filename.c_str(), "w");  
     
     if (!fHandler_) {
         throw std::runtime_error("Failed to open new log file: " + new_filename);
     }
 
-    // 4. 重置当前文件大小计数器
     current_size_ = 0;
 
-    // 5. 添加调试输出
     std::cout << "Rotated to new log file: " << new_filename 
               << " handler: " << fHandler_ << std::endl;
 }
@@ -95,10 +89,9 @@ bool LogSplitter::rename_file(const std::string &src_filename, const std::string
 
 std::string LogSplitter::calculate_filename(const std::string &base_filename, size_t index) {
     if (index == 0) {
-        return base_filename + ".txt";  // 基础文件
+        return base_filename + ".txt";  
     }
     
-    // 为轮转的文件添加序号
     return base_filename + "." + std::to_string(index) + ".txt";
 }
 

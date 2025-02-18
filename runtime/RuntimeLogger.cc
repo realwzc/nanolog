@@ -694,35 +694,42 @@ RuntimeLogger::getLogFile_internal()  const {
     return logFileName_.c_str();
 }
 // Documentation in NanoLog.h
-void RuntimeLogger::setLogFile_internal(const char *filename, const char *hostname, int pid)
+void RuntimeLogger::setLogFile_internal(const char *hostname, int pid)
 {
-    logFileName_ = std::string(filename) + ".txt";
-    // Check if it exists and is readable/writeable
-    if (access(filename, F_OK) == 0 && access(filename, R_OK | W_OK) != 0) {
-        std::string err = "Unable to read/write from new log file: ";
-        err.append(filename);
-        throw std::ios_base::failure(err);
+    NanoConfig cfg;
+    if (nano_conf("nanolog.conf", cfg)) {
+        std::cout << "Log Level: " << cfg.log_level << "\n"
+                << "Log File: " << cfg.log_file << "\n"
+                << "Max Size: " << cfg.max_file_size << " bytes\n"
+                << "Max Files: " << cfg.max_files << std::endl;
     }
 
-    // Try to open the file
-    // int newFd = open(filename, NanoLogConfig::FILE_PARAMS, 0666);
+    logFileName_ = std::string(cfg.log_file);
+    // Check if it exists and is readable/writeable
+    if (access(logFileName_.c_str(), F_OK) == 0 && access(logFileName_.c_str(), R_OK | W_OK) != 0) {
+        std::string err = "Unable to read/write from new log file: ";
+        err.append(logFileName_.c_str());
+        throw std::ios_base::failure(err);
+    }
+    NanoLog::LogLevel currentLogLevel{NanoLog::LogLevel::INFO};
+    if (cfg.log_level == "ERROR") {
+        currentLogLevel = NanoLog::ERROR;
+    } else if (cfg.log_level == "WARNING") {
+        currentLogLevel = NanoLog::WARN;  
+    } else if (cfg.log_level == "INFO") {
+        currentLogLevel = NanoLog::INFO;
+    } else if (cfg.log_level == "DEBUG") {
+        currentLogLevel = NanoLog::DEBUG;
+    }
+    NanoLog::setLogLevel(currentLogLevel);
 
-    // std::cout << "newFd  " << newFd << std::endl;
-    // if (newFd < 0) {
-    //     std::string err = "Unable to open file new log file: '";
-    //     err.append(filename);
-    //     err.append("': ");
-    //     err.append(strerror(errno));
-    //     throw std::ios_base::failure(err);
-    // }
-    // logSplitter_ = std::make_shared<LogSplitter>(filename, 500, 5);
-    logSplitter_ = std::make_shared<LogSplitter>(filename, 10 * 1024 * 1024, 5);
+    logSplitter_ = std::make_shared<LogSplitter>(logFileName_, cfg.max_file_size, cfg.max_files);
 
     // Try to open the file using LogSplitter
     FILE* newFd = logSplitter_->getCurrentFileHandler();
     if (!newFd) {
         std::string err = "Unable to open new log file: ";
-        err.append(filename);
+        err.append(logFileName_);
         throw std::ios_base::failure(err);
     }
     // Everything seems okay, stop the background thread and change files
@@ -749,7 +756,6 @@ void RuntimeLogger::setLogFile_internal(const char *filename, const char *hostna
     nextInvocationIndexToBePersisted = 0; // Reset the dictionary
     compressionThreadShouldExit = false;
 #ifndef BENCHMARK_DISCARD_ENTRIES_AT_STAGINGBUFFER
-    // std::cout << "rrrrrrrr" << std::endl;
     int i = 1;
     //todo::这里写的太粗糙，一会儿改改
     compressionThread = std::thread([this, i, hostname, pid]()
@@ -772,14 +778,57 @@ void RuntimeLogger::setLogFile_internal(const char *filename, const char *hostna
 * \throw is_base::failure
 *      if the file cannot be opened or crated
 */
-void RuntimeLogger::setLogFile(const char *filename, const char *hostname, int pid)
+void RuntimeLogger::setLogFile(const char *hostname, int pid)
 {
-    nanoLogSingleton.setLogFile_internal(filename,hostname,pid);
+    nanoLogSingleton.setLogFile_internal(hostname, pid);
 }
 
 const char *
 RuntimeLogger::getTxtLogFile() {
     return nanoLogSingleton.getLogFile_internal();
+}
+
+void RuntimeLogger::trim(std::string& s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+
+bool RuntimeLogger::nano_conf(const std::string& filename, NanoConfig& config) {
+    std::ifstream file(filename);
+    if (!file.is_open()) return false;
+
+    std::string line;
+    while (std::getline(file, line)) {
+        if (auto pos = line.find('#'); pos != std::string::npos)
+            line = line.substr(0, pos);
+        
+        trim(line);
+        if (line.empty()) continue;
+
+        if (auto eq_pos = line.find('='); eq_pos != std::string::npos) {
+            std::string key = line.substr(0, eq_pos);
+            std::string value = line.substr(eq_pos + 1);
+            trim(key);
+            trim(value);
+
+            if (key == "log_level") {
+                config.log_level = value;
+            } else if (key == "log_file") {
+                config.log_file = value;
+            } else if (key == "max_file_size") {
+                try { config.max_file_size = std::stoi(value); }
+                catch (...) { return false; }
+            } else if (key == "max_files") {
+                try { config.max_files = std::stoi(value); }
+                catch (...) { return false; }
+            }
+        }
+    }
+    return true;
 }
 
 /**

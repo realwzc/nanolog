@@ -30,9 +30,9 @@ namespace NanoLog {
         RuntimeLogger::preallocate();
     }
 
-    void setLogFile(const char *filename, const char *hostname, int pid)
+    void setLogFile(const char *hostname, int pid)
     {
-        RuntimeLogger::setLogFile(filename, hostname, pid);
+        RuntimeLogger::setLogFile(hostname, pid);
     }
 
     LogLevel getLogLevel() {

@@ -80,7 +80,7 @@ void preallocate();
  * \param filename
  *      Where to place the log file
  */
-void setLogFile(const char *filename, const char *hostname, int pid);
+void setLogFile(const char *hostname, int pid);
 
 /**
  * Sets the minimum logging severity level in the system. All log statements

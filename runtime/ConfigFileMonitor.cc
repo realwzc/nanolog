@@ -100,7 +100,7 @@ std::filesystem::file_time_type ConfigFileMonitor::getConfigFileModTime() const 
         return std::filesystem::last_write_time(configPath_);
     } catch (const std::filesystem::filesystem_error& e) {
         std::cerr << "Error getting config file modification time: " << e.what() << std::endl;
-        return std::filesystem::file_time_type::min();  // 返回最小时间点
+        return std::filesystem::file_time_type::min();  
     }
 }
 

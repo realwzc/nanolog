@@ -4,9 +4,8 @@
 
 namespace NanoLogInternal {
 
-bool LogManager::initialize(const std::string& logFilePath,
-                          const std::string& configPath,
-                          std::chrono::milliseconds pollInterval) {
+bool LogManager::initialize(const std::string& configPath,
+                            std::chrono::milliseconds pollInterval) {
     if (initialized_) {
         std::cerr << "LogManager already initialized" << std::endl;
         return false;
@@ -16,7 +15,7 @@ bool LogManager::initialize(const std::string& logFilePath,
     initializeHostInfo();
 
     // Initialize log file
-    if (!initializeLogFile(logFilePath)) {
+    if (!initializeLogFile()) {
         return false;
     }
 
@@ -82,9 +81,9 @@ void LogManager::initializeHostInfo() {
     pid_ = getpid();
 }
 
-bool LogManager::initializeLogFile(const std::string& logFilePath) {
+bool LogManager::initializeLogFile() {
     try {
-        NanoLog::setLogFile(logFilePath.c_str(), hostname_.c_str(), pid_);
+        NanoLog::setLogFile(hostname_.c_str(), pid_);
         return true;
     } catch (const std::exception& e) {
         std::cerr << "Failed to set log file: " << e.what() << std::endl;

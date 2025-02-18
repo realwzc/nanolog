@@ -32,11 +32,7 @@ void runBenchmark();
 using namespace NanoLog::LogLevels;
 
 int main(int argc, char** argv) {
-    // Optional: Set the output location for the NanoLog system. By default
-    // the log will be output to ./compressedLog
 
-    NanoLog::setLogFile("app.log", hostname, pid);
-  
     auto& logManager = NanoLogInternal::LogManager::getInstance();
     if (!logManager.initialize()) {
         std::cerr << "Failed to initialize logging system" << std::endl;

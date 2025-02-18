@@ -27,8 +27,7 @@ public:
      * @param pollInterval Config check interval
      * @return true if initialization successful
      */
-    bool initialize(const std::string& logFilePath = "app.log",
-                   const std::string& configPath = "nanolog.conf",
+    bool initialize(const std::string& configPath = "nanolog.conf",
                    std::chrono::milliseconds pollInterval = std::chrono::milliseconds(1000));
 
     /**
@@ -53,7 +52,7 @@ private:
     LogManager(const LogManager&) = delete;
     LogManager& operator=(const LogManager&) = delete;
 
-    bool initializeLogFile(const std::string& logFilePath);
+    bool initializeLogFile();
     void initializeHostInfo();
 
     std::unique_ptr<ConfigFileMonitor> configMonitor_;

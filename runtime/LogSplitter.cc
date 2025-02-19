@@ -89,10 +89,10 @@ bool LogSplitter::rename_file(const std::string &src_filename, const std::string
 
 std::string LogSplitter::calculate_filename(const std::string &base_filename, size_t index) {
     if (index == 0) {
-        return base_filename + ".txt";  
+        return base_filename;  
     }
     
-    return base_filename + "." + std::to_string(index) + ".txt";
+    return base_filename + "." + std::to_string(index);
 }
 
 std::pair<std::string, std::string> LogSplitter::split_filename(const std::string &filename)
